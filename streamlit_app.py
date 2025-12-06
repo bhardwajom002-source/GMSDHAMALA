@@ -324,89 +324,52 @@ def teacher_login_ui():
         st.session_state.ui_mode = "reset_pwd"
 
 def teacher_dashboard_ui():
-    st.header("Teacher Dashboard")
-    st.write("You can add students, edit, mark attendance, export data, search and create WhatsApp group links.")
-    # top action buttons
-    col1, col2, col3, col4 = st.columns([3,1,1,1])
-    with col2:
-        if st.button("Export CSV"):
-            df = get_all_students_df()
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button("Download CSV", data=csv, file_name="students.csv")
-    with col3:
-        if st.button("Delete All Students"):
-            if st.confirm("Are you sure to delete ALL students?"):
-                delete_all_students()
-                st.success("All students deleted")
-                st.rerun()
-    with col4:
-        if st.button("Change Teacher Password"):
-            st.session_state.ui_mode = "change_pwd"
+    import streamlit as st
+    import pandas as pd
 
-    # Search
-    q = st.text_input("Search by name/father/aadhar", value="", key="search_q")
-    df = get_all_students_df()
-    if q:
-        df = df[df.apply(lambda r: q.lower() in str(r['name']).lower() or
-                               q.lower() in str(r['father']).lower() or
-                               q.lower() in str(r['aadhar']).lower(), axis=1)]
+    st.title("Teacher Dashboard")
 
-    # Add student form
-    st.subheader("➕ Add New Student")
-    with st.form("add_student_form", clear_on_submit=True):
-        a_name = st.text_input("Student Name *")
-        a_class = st.selectbox("Class *", options=["6th", "7th", "8th"], index=2)
-        a_father = st.text_input("Father Name")
-        a_mother = st.text_input("Mother Name")
-        a_aadhar = st.text_input("Aadhar (<=12 digits)")
-        a_dob = st.date_input("DOB (required)", value=date(2016,1,1), min_value=date(2000,1,1), max_value=date.today())
-        a_phone = st.text_input("Phone (10 digits)")
-        a_whatsapp = st.text_input("WhatsApp (10 digits) - optional")
-        submitted = st.form_submit_button("Add Student")
-        if submitted:
-            # validations
-            if not a_name:
-                st.error("Name is required")
-            elif a_aadhar and (not a_aadhar.isdigit() or len(a_aadhar) > 12):
-                st.error("Aadhar must be digits and max 12")
-            elif a_phone and (not a_phone.isdigit() or len(a_phone) != 10):
-                st.error("Phone must be 10 digits")
-            elif a_whatsapp and (not a_whatsapp.isdigit() or len(a_whatsapp) != 10):
-                st.error("WhatsApp must be 10 digits")
-            else:
-                nid = insert_student({
-                    "name": a_name.strip(),
-                    "sclass": a_class,
-                    "father": a_father.strip(),
-                    "mother": a_mother.strip(),
-                    "aadhar": a_aadhar.strip(),
-                    "dob": a_dob.isoformat(),
-                    "phone": a_phone.strip(),
-                    "whatsapp": a_whatsapp.strip()
-                })
-                st.success(f"Student added with id {nid}")
-                st.rerun()
-
-    st.subheader("📋 Students List")
-    if df.empty:
-        st.info("No students")
+    # Example: Load your DataFrame
+    # Replace this with your actual DataFrame loading
+    try:
+        df = pd.read_csv("students.csv")  # ya database se fetch
+    except Exception as e:
+        st.error(f"Error loading student data: {e}")
         return
 
-    # Display with edit/attendance/delete per row
+    if df.empty:
+        st.info("No student records found.")
+        return
+
+    # Strip column names to avoid whitespace issues
+    df.columns = df.columns.str.strip()
+
+    # Iterate through rows safely
     for _, r in df.iterrows():
-        st.markdown("----")
-        cols = st.columns([4,1,1,1,1])
-        # left large column: student info nicely
-        left = cols[0]
-        with left:
-        st.write(r.index)  # debug: print all columns
+        # Debug: check column names (optional, remove in production)
+        st.write(r.index)
 
-class_name = r['sclass'] if 'sclass' in r else 'N/A'  # line 401
+        # Safe access for each field
+        student_id = r['id'] if 'id' in r else 'N/A'
+        student_name = r['name'] if 'name' in r else 'N/A'
+        class_name = r['sclass'] if 'sclass' in r else 'N/A'  # replace 'sclass' if actual column name is different
+        father_name = r['father'] if 'father' in r else 'N/A'
+        mother_name = r['mother'] if 'mother' in r else 'N/A'
+        aadhar = r['aadhar'] if 'aadhar' in r else '-'
+        dob = r['dob'] if 'dob' in r else '-'
+        phone = r['phone'] if 'phone' in r else '-'
+        whatsapp = r['whatsapp'] if 'whatsapp' in r else '-'
+        present = int(r['present']) if 'present' in r else 0
+        absent = int(r['absent']) if 'absent' in r else 0
 
-st.markdown(f"**{int(r['id'])}. {r['name']}**  •  Class: **{class_name}**")  # line 402
-st.markdown(f"Father: {r['father']}  |  Mother: {r['mother']}")
-st.markdown(f"Aadhar: {r['aadhar'] or '-'}  |  DOB: {r['dob']}  |  Phone: 📞 {r['phone'] or '-'}  WhatsApp: 💬 {r['whatsapp'] or '-'}")
-st.markdown(f"Present: ✅ {int(r['present'])}   Absent: ❌ {int(r['absent'])}")
+        # Display in Streamlit
+        st.markdown(f"**{student_id}. {student_name}**  •  Class: **{class_name}**")
+        st.markdown(f"Father: {father_name}  |  Mother: {mother_name}")
+        st.markdown(f"Aadhar: {aadhar or '-'}  |  DOB: {dob}  |  Phone: 📞 {phone or '-'}  WhatsApp: 💬 {whatsapp or '-'}")
+        st.markdown(f"Present: ✅ {present}   Absent: ❌ {absent}")
+        st.markdown("---")  # separator between students
+
+   
 
 
         # action buttons
