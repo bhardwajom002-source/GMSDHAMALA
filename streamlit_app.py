@@ -399,10 +399,15 @@ def teacher_dashboard_ui():
         # left large column: student info nicely
         left = cols[0]
         with left:
-            st.markdown(f"**{int(r['id'])}. {r['name']}**  •  Class: **{r['class']}**")
-            st.markdown(f"Father: {r['father']}  |  Mother: {r['mother']}")
-            st.markdown(f"Aadhar: {r['aadhar'] or '-'}  |  DOB: {r['dob']}  |  Phone: 📞 {r['phone'] or '-'}  WhatsApp: 💬 {r['whatsapp'] or '-'}")
-            st.markdown(f"Present: ✅ {int(r['present'])}   Absent: ❌ {int(r['absent'])}")
+        st.write(r.index)  # debug: print all columns
+
+class_name = r['sclass'] if 'sclass' in r else 'N/A'  # line 401
+
+st.markdown(f"**{int(r['id'])}. {r['name']}**  •  Class: **{class_name}**")  # line 402
+st.markdown(f"Father: {r['father']}  |  Mother: {r['mother']}")
+st.markdown(f"Aadhar: {r['aadhar'] or '-'}  |  DOB: {r['dob']}  |  Phone: 📞 {r['phone'] or '-'}  WhatsApp: 💬 {r['whatsapp'] or '-'}")
+st.markdown(f"Present: ✅ {int(r['present'])}   Absent: ❌ {int(r['absent'])}")
+
 
         # action buttons
         if cols[1].button("Present", key=f"p_{r['id']}"):
