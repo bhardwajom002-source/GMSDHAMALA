@@ -347,9 +347,9 @@ def teacher_dashboard_ui():
     q = st.text_input("Search by name/father/aadhar", value="", key="search_q")
     df = get_all_students_df()
     if q:
-        df = df[df.apply(lambda r: q.lower() in str(r.get('name', '')).lower() or
-                               q.lower() in str(r.get('father', '')).lower() or
-                               q.lower() in str(r.get('aadhar', '')).lower(), axis=1)]
+        df = df[df.apply(lambda r: q.lower() in str(r['name']).lower() or
+                               q.lower() in str(r['father']).lower() or
+                               q.lower() in str(r['aadhar']).lower(), axis=1)]
 
     st.subheader("📋 Students List")
     if df.empty:
@@ -362,32 +362,28 @@ def teacher_dashboard_ui():
         cols = st.columns([4,1,1,1,1])
         # Left column: student info
         with cols[0]:
-            student_id = int(r.get('id', 0))
-            student_name = r.get('name', 'Unknown')
-            student_class = r.get('sclass', '-')
-            st.markdown(f"**{student_id}. {student_name}**  •  Class: **{student_class}**")
-            st.markdown(f"Father: {r.get('father','-')}  |  Mother: {r.get('mother','-')}")
-            st.markdown(f"Aadhar: {r.get('aadhar','-')}  |  DOB: {r.get('dob','-')}  |  Phone: 📞 {r.get('phone','-')}  WhatsApp: 💬 {r.get('whatsapp','-')}")
-            st.markdown(f"Present: ✅ {int(r.get('present',0))}   Absent: ❌ {int(r.get('absent',0))}")
+            st.markdown(f"**{int(r['id'])}. {r['name']}**  •  Class: **{r['sclass']}**")
+            st.markdown(f"Father: {r['father']}  |  Mother: {r['mother']}")
+            st.markdown(f"Aadhar: {r['aadhar'] or '-'}  |  DOB: {r['dob']}  |  Phone: 📞 {r['phone'] or '-'}  WhatsApp: 💬 {r['whatsapp'] or '-'}")
+            st.markdown(f"Present: ✅ {int(r['present'])}   Absent: ❌ {int(r['absent'])}")
 
         # Action buttons
-        if cols[1].button("Present", key=f"p_{student_id}"):
-            update_attendance(student_id, "present")
+        if cols[1].button("Present", key=f"p_{r['id']}"):
+            update_attendance(int(r['id']), "present")
             st.experimental_rerun()
-        if cols[2].button("Absent", key=f"a_{student_id}"):
-            update_attendance(student_id, "absent")
+        if cols[2].button("Absent", key=f"a_{r['id']}"):
+            update_attendance(int(r['id']), "absent")
             st.experimental_rerun()
-        if cols[3].button("Edit", key=f"e_{student_id}"):
-            with st.form(f"edit_form_{student_id}", clear_on_submit=False):
-                ename = st.text_input("Name", value=student_name)
-                eclass = st.selectbox("Class", ["6th","7th","8th"], index=["6th","7th","8th"].index(student_class) if student_class in ["6th","7th","8th"] else 0)
-                efather = st.text_input("Father", value=r.get('father',''))
-                emother = st.text_input("Mother", value=r.get('mother',''))
-                eaadhar = st.text_input("Aadhar", value=r.get('aadhar',''))
-                edob_val = r.get('dob')
-                edob = st.date_input("DOB", value=datetime.fromisoformat(edob_val).date() if edob_val else date(2016,1,1))
-                ephone = st.text_input("Phone", value=r.get('phone',''))
-                ewh = st.text_input("WhatsApp", value=r.get('whatsapp',''))
+        if cols[3].button("Edit", key=f"e_{r['id']}"):
+            with st.form(f"edit_form_{r['id']}", clear_on_submit=False):
+                ename = st.text_input("Name", value=r['name'])
+                eclass = st.selectbox("Class", ["6th","7th","8th"], index=["6th","7th","8th"].index(r['sclass']))
+                efather = st.text_input("Father", value=r['father'])
+                emother = st.text_input("Mother", value=r['mother'])
+                eaadhar = st.text_input("Aadhar", value=r['aadhar'])
+                edob = st.date_input("DOB", value=datetime.fromisoformat(r['dob']).date() if r['dob'] else date(2016,1,1))
+                ephone = st.text_input("Phone", value=r['phone'])
+                ewh = st.text_input("WhatsApp", value=r['whatsapp'])
                 if st.form_submit_button("Save"):
                     if eaadhar and (not eaadhar.isdigit() or len(eaadhar) > 12):
                         st.error("Aadhar invalid")
@@ -396,7 +392,7 @@ def teacher_dashboard_ui():
                     elif ewh and (not ewh.isdigit() or len(ewh) != 10):
                         st.error("Whatsapp invalid")
                     else:
-                        update_student(student_id, {
+                        update_student(int(r['id']), {
                             "name": ename,
                             "sclass": eclass,
                             "father": efather,
@@ -408,12 +404,14 @@ def teacher_dashboard_ui():
                         })
                         st.success("Updated")
                         st.experimental_rerun()
-        if cols[4].button("Delete", key=f"d_{student_id}"):
-            delete_student(student_id)
+        if cols[4].button("Delete", key=f"d_{r['id']}"):
+            delete_student(int(r['id']))
             st.success("Deleted")
-            st.experimental_rerun()
+            st.session_state
 
-    # WhatsApp group generator
+
+
+    # WhatsApp group generator: collect whatsapp numbers
     st.markdown("---")
     if st.button("Generate WhatsApp Group Link (collect all WhatsApp numbers)"):
         df2 = get_all_students_df()
@@ -422,12 +420,12 @@ def teacher_dashboard_ui():
         if not nums:
             st.warning("No valid whatsapp numbers collected")
         else:
+            # WhatsApp group creation can't be automated; we provide a preview list and message template
             st.success(f"Collected {len(nums)} WhatsApp numbers")
-            st.write(", ".join([f"+91{n}" for n in nums[:50]]))
+            st.write(", ".join([f"+91{n}" for n in nums[:50]]))  # show up to 50
             st.markdown("**Message template:**")
             st.code("Hello, this group is for class updates. - GMS School")
             st.info("To create a group: use WhatsApp app, create group and add these numbers (above).")
-
 
 # -------------------------
 # Password reset and change flows
