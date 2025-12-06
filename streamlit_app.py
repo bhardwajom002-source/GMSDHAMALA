@@ -399,7 +399,7 @@ def teacher_dashboard_ui():
         # left large column: student info nicely
         left = cols[0]
         with left:
-            st.markdown(f"**{int(r['id'])}. {r['name']}**  •  Class: **{r['sclass']}**")
+            st.markdown(f"**{int(r['id'])}. {r['name']}**  •  Class: **{r['class']}**")
             st.markdown(f"Father: {r['father']}  |  Mother: {r['mother']}")
             st.markdown(f"Aadhar: {r['aadhar'] or '-'}  |  DOB: {r['dob']}  |  Phone: 📞 {r['phone'] or '-'}  WhatsApp: 💬 {r['whatsapp'] or '-'}")
             st.markdown(f"Present: ✅ {int(r['present'])}   Absent: ❌ {int(r['absent'])}")
