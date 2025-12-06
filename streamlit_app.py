@@ -256,14 +256,14 @@ with st.sidebar:
             st.session_state.ui_mode = "teacher"
         if st.button("Logout Teacher"):
             st.session_state.teacher_logged_in = False
-            st.rerun()
+            st.experimental_rerun()
     if st.session_state.student_logged_in:
         if st.button("My Profile"):
             st.session_state.ui_mode = "student"
         if st.button("Logout Student"):
             st.session_state.student_logged_in = False
             st.session_state.student_id = None
-            st.rerun()
+            st.experimental_rerun()
 
 # -------------------------
 # HOME
@@ -305,7 +305,7 @@ def teacher_login_ui():
             st.session_state.teacher_logged_in = True
             st.success("Login successful")
             st.session_state.ui_mode = "teacher"
-            st.rerun()
+            st.session_state
         else:
             st.error("Invalid username/password")
 
@@ -324,63 +324,57 @@ def teacher_login_ui():
         st.session_state.ui_mode = "reset_pwd"
 
 def teacher_dashboard_ui():
-    import streamlit as st
-    import pandas as pd
+    st.header("Teacher Dashboard")
+    st.write("You can add students, edit, mark attendance, export data, search and create WhatsApp group links.")
 
-    st.title("Teacher Dashboard")
+    # Export, Delete all, Change password buttons
+    col1, col2, col3, col4 = st.columns([3,1,1,1])
+    with col2:
+        if st.button("Export CSV"):
+            df = get_all_students_df()
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("Download CSV", data=csv, file_name="students.csv")
+    with col3:
+        if st.button("Delete All Students"):
+            delete_all_students()
+            st.success("All students deleted")
+            st.experimental_rerun()
+    with col4:
+        if st.button("Change Teacher Password"):
+            st.session_state.ui_mode = "change_pwd"
 
-    # Example: Load your DataFrame
-    # Replace this with your actual DataFrame loading
-    try:
-        df = pd.read_csv("students.csv")  # ya database se fetch
-    except Exception as e:
-        st.error(f"Error loading student data: {e}")
-        return
+    # Search
+    q = st.text_input("Search by name/father/aadhar", value="", key="search_q")
+    df = get_all_students_df()
+    if q:
+        df = df[df.apply(lambda r: q.lower() in str(r['name']).lower() or
+                               q.lower() in str(r['father']).lower() or
+                               q.lower() in str(r['aadhar']).lower(), axis=1)]
 
+    st.subheader("📋 Students List")
     if df.empty:
-        st.info("No student records found.")
+        st.info("No students")
         return
 
-    # Strip column names to avoid whitespace issues
-    df.columns = df.columns.str.strip()
-
-    # Iterate through rows safely
+    # --- Display each student row ---
     for _, r in df.iterrows():
-        # Debug: check column names (optional, remove in production)
-        st.write(r.index)
+        st.markdown("----")
+        cols = st.columns([4,1,1,1,1])
+        # Left column: student info
+        with cols[0]:
+            st.markdown(f"**{int(r['id'])}. {r['name']}**  •  Class: **{r['sclass']}**")
+            st.markdown(f"Father: {r['father']}  |  Mother: {r['mother']}")
+            st.markdown(f"Aadhar: {r['aadhar'] or '-'}  |  DOB: {r['dob']}  |  Phone: 📞 {r['phone'] or '-'}  WhatsApp: 💬 {r['whatsapp'] or '-'}")
+            st.markdown(f"Present: ✅ {int(r['present'])}   Absent: ❌ {int(r['absent'])}")
 
-        # Safe access for each field
-        student_id = r['id'] if 'id' in r else 'N/A'
-        student_name = r['name'] if 'name' in r else 'N/A'
-        class_name = r['sclass'] if 'sclass' in r else 'N/A'  # replace 'sclass' if actual column name is different
-        father_name = r['father'] if 'father' in r else 'N/A'
-        mother_name = r['mother'] if 'mother' in r else 'N/A'
-        aadhar = r['aadhar'] if 'aadhar' in r else '-'
-        dob = r['dob'] if 'dob' in r else '-'
-        phone = r['phone'] if 'phone' in r else '-'
-        whatsapp = r['whatsapp'] if 'whatsapp' in r else '-'
-        present = int(r['present']) if 'present' in r else 0
-        absent = int(r['absent']) if 'absent' in r else 0
-
-        # Display in Streamlit
-        st.markdown(f"**{student_id}. {student_name}**  •  Class: **{class_name}**")
-        st.markdown(f"Father: {father_name}  |  Mother: {mother_name}")
-        st.markdown(f"Aadhar: {aadhar or '-'}  |  DOB: {dob}  |  Phone: 📞 {phone or '-'}  WhatsApp: 💬 {whatsapp or '-'}")
-        st.markdown(f"Present: ✅ {present}   Absent: ❌ {absent}")
-        st.markdown("---")  # separator between students
-
-   
-
-
-        # action buttons
+        # Action buttons
         if cols[1].button("Present", key=f"p_{r['id']}"):
             update_attendance(int(r['id']), "present")
-            st.rerun()
+            st.experimental_rerun()
         if cols[2].button("Absent", key=f"a_{r['id']}"):
             update_attendance(int(r['id']), "absent")
-            st.rerun()
+            st.experimental_rerun()
         if cols[3].button("Edit", key=f"e_{r['id']}"):
-            # open edit modal inline: prefill values
             with st.form(f"edit_form_{r['id']}", clear_on_submit=False):
                 ename = st.text_input("Name", value=r['name'])
                 eclass = st.selectbox("Class", ["6th","7th","8th"], index=["6th","7th","8th"].index(r['sclass']))
@@ -391,7 +385,6 @@ def teacher_dashboard_ui():
                 ephone = st.text_input("Phone", value=r['phone'])
                 ewh = st.text_input("WhatsApp", value=r['whatsapp'])
                 if st.form_submit_button("Save"):
-                    # validations
                     if eaadhar and (not eaadhar.isdigit() or len(eaadhar) > 12):
                         st.error("Aadhar invalid")
                     elif ephone and (not ephone.isdigit() or len(ephone) != 10):
@@ -410,12 +403,13 @@ def teacher_dashboard_ui():
                             "whatsapp": ewh
                         })
                         st.success("Updated")
-                        st.rerun()
+                        st.experimental_rerun()
         if cols[4].button("Delete", key=f"d_{r['id']}"):
-            if st.confirm(f"Delete student {r['name']}?"):
-                delete_student(int(r['id']))
-                st.success("Deleted")
-                st.rerun()
+            delete_student(int(r['id']))
+            st.success("Deleted")
+            st.session_state
+
+
 
     # WhatsApp group generator: collect whatsapp numbers
     st.markdown("---")
@@ -476,7 +470,7 @@ def change_password_ui():
             st.success("Password updated. Please login again.")
             st.session_state.teacher_logged_in = False
             st.session_state.ui_mode = "teacher"
-            st.rerun()
+            st.session_state
 
 # -------------------------
 # STUDENT SIGNUP & LOGIN
@@ -551,7 +545,7 @@ def student_login_ui():
                     st.session_state.student_id = sid
                     st.success("Logged in. Showing your data")
                     st.session_state.ui_mode = "student"
-                    st.rerun()
+                    st.session_state
             else:
                 st.error("No student found with that name and phone")
 
@@ -575,7 +569,7 @@ def student_login_ui():
                     st.session_state.student_id = sidv
                     st.success("Logged in successfully")
                     st.session_state.ui_mode = "student"
-                    st.rerun()
+                    st.session_state
                 else:
                     st.error("Invalid credentials")
 
