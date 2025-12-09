@@ -4,12 +4,9 @@ import sqlite3
 import pandas as pd
 import json
 from datetime import date
-import matplotlib.pyplot as plt
-import io
 import os
-import re
 
-DB_FILE = "students.db"
+DB_FILE = "student.db"
 TEACHER_USER = "rekha"
 TEACHER_PASS = "rekha"
 
@@ -18,6 +15,7 @@ def init_db():
     create = not os.path.exists(DB_FILE)
     conn = sqlite3.connect(DB_FILE, check_same_thread=False)
     c = conn.cursor()
+    # Students table
     c.execute("""
     CREATE TABLE IF NOT EXISTS students (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,6 +31,16 @@ def init_db():
         username TEXT UNIQUE,
         password TEXT,
         attendance TEXT DEFAULT '{}'
+    )
+    """)
+    # Messages table
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_username TEXT,
+        message TEXT,
+        response TEXT,
+        timestamp TEXT DEFAULT CURRENT_TIMESTAMP
     )
     """)
     conn.commit()
@@ -53,7 +61,7 @@ def fetch_df():
     conn = sqlite3.connect(DB_FILE)
     try:
         df = pd.read_sql_query("SELECT * FROM students", conn)
-    except Exception:
+    except:
         df = pd.DataFrame()
     conn.close()
     required_cols = ['id','name','class','father','mother','aadhar','place',
@@ -105,49 +113,33 @@ def get_student_by_id(sid):
     rows = run_query("SELECT * FROM students WHERE id=?", (sid,))
     return rows[0] if rows else None
 
-# ------------------------- UTILS -------------------------
 def is_valid_phone(p):
-    return isinstance(p, str) and p.isdigit() and len(p) == 10
+    return isinstance(p,str) and p.isdigit() and len(p)==10
 
 def is_valid_aadhar(a):
-    return isinstance(a, str) and a.isdigit() and 4 <= len(a) <= 12
+    return isinstance(a,str) and a.isdigit() and 4<=len(a)<=12
 
 def parse_att_json(att):
-    if not att:
-        return {}
-    if isinstance(att, str):
+    if not att: return {}
+    if isinstance(att,str):
         try:
             return json.loads(att)
-        except:
-            return {}
-    if isinstance(att, dict):
-        return att
+        except: return {}
+    if isinstance(att,dict): return att
     return {}
 
-def attendance_aggregate_year(df, year):
-    y = str(year)
-    agg = {"present":0, "absent":0}
-    for _, r in df.iterrows():
-        att = parse_att_json(r.get('attendance', "{}"))
-        if y in att:
-            agg['present'] += int(att[y].get('present',0))
-            agg['absent'] += int(att[y].get('absent',0))
-    return agg
-
-# ------------------------- INIT -------------------------
+# ------------------------- APP -------------------------
 st.set_page_config(page_title="GMS SCHOOL DHAMALA", layout="wide", page_icon="🎓")
 init_db()
 
-if 'role' not in st.session_state:
-    st.session_state.role = None
-if 'student_user' not in st.session_state:
-    st.session_state.student_user = None
+if 'role' not in st.session_state: st.session_state.role=None
+if 'student_user' not in st.session_state: st.session_state.student_user=None
 
 page = st.sidebar.radio("Navigate", ["Home","Teacher Login","Student Login/Signup","AI Assistant","About"])
 
 # ------------------------- HOME -------------------------
 if page=="Home":
-    st.write("Welcome — use sidebar to navigate. Teacher: rekha / rekha")
+    st.write("Welcome to GMS SCHOOL DHAMALA — Teacher: rekha / rekha")
 
 # ------------------------- TEACHER LOGIN -------------------------
 if page=="Teacher Login":
@@ -201,7 +193,6 @@ if page=="Teacher Login":
         with right:
             st.markdown("### Student Records")
             df = fetch_df()
-            # Ensure columns exist
             for col in ['class','username','place','attendance']:
                 if col not in df.columns: df[col]=""
             display_cols=['id','name','class','father','mother','aadhar','place','dob','phone','whatsapp','username']
@@ -209,6 +200,24 @@ if page=="Teacher Login":
                 st.info("No students yet")
             else:
                 st.dataframe(df[display_cols], height=300)
+
+            # Student Messages
+            st.markdown("### Student Messages")
+            conn = sqlite3.connect(DB_FILE)
+            df_msg = pd.read_sql_query("SELECT * FROM messages ORDER BY timestamp DESC", conn)
+            conn.close()
+            if not df_msg.empty:
+                for i,row in df_msg.iterrows():
+                    st.markdown(f"**{row['student_username']}**: {row['message']}")
+                    reply_key = f"reply_{row['id']}"
+                    reply_val = st.text_input(f"Reply to {row['student_username']}", key=reply_key)
+                    if st.button(f"Send Reply {row['id']}"):
+                        conn = sqlite3.connect(DB_FILE)
+                        c = conn.cursor()
+                        c.execute("UPDATE messages SET response=? WHERE id=?", (reply_val,row['id']))
+                        conn.commit()
+                        conn.close()
+                        st.success("Reply sent")
 
 # ------------------------- STUDENT LOGIN/SIGNUP -------------------------
 if page=="Student Login/Signup":
@@ -265,5 +274,22 @@ if page=="Student Login/Signup":
             st.write("DOB:", row[7])
             st.write("Phone:", row[8])
             st.write("WhatsApp:", row[9])
-            att=parse_att_json(row[12])
-            if att: st.table(pd.DataFrame.from_dict(att, orient='index'))
+            st.subheader("Your Messages / Responses")
+            conn = sqlite3.connect(DB_FILE)
+            df_msg = pd.read_sql_query("SELECT * FROM messages WHERE student_username=? ORDER BY timestamp DESC",
+                                       conn, params=(st.session_state.student_user,))
+            conn.close()
+            if not df_msg.empty:
+                st.dataframe(df_msg[['message','response','timestamp']])
+            
+            st.subheader("Send Message to Teacher")
+            msg = st.text_area("Type your message here")
+            if st.button("Send Message"):
+                if msg.strip():
+                    conn = sqlite3.connect(DB_FILE)
+                    c = conn.cursor()
+                    c.execute("INSERT INTO messages (student_username, message) VALUES (?,?)",
+                              (st.session_state.student_user, msg.strip()))
+                    conn.commit()
+                    conn.close()
+                    st.success("Message sent to teacher")
