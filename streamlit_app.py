@@ -2,15 +2,18 @@
 import streamlit as st
 import sqlite3
 import pandas as pd
+import matplotlib.pyplot as plt
 import json
 from datetime import date
 import os
+import hashlib
+import io
 
 DB_FILE = "student.db"
 TEACHER_USER = "rekha"
 TEACHER_PASS = "rekha"
 
-# ------------------------- DB INIT -------------------------
+# ------------------ DB INIT ------------------
 def init_db():
     create = not os.path.exists(DB_FILE)
     conn = sqlite3.connect(DB_FILE, check_same_thread=False)
@@ -30,7 +33,16 @@ def init_db():
         whatsapp TEXT,
         username TEXT UNIQUE,
         password TEXT,
-        attendance TEXT DEFAULT '{}'
+        attendance TEXT DEFAULT '{}',
+        marks TEXT DEFAULT '{}'
+    )
+    """)
+    # Teachers table
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS teachers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT
     )
     """)
     # Messages table
@@ -47,7 +59,7 @@ def init_db():
     conn.close()
     return create
 
-# ------------------------- DB HELPERS -------------------------
+# ------------------ DB HELPERS ------------------
 def run_query(query, params=()):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -65,23 +77,24 @@ def fetch_df():
         df = pd.DataFrame()
     conn.close()
     required_cols = ['id','name','class','father','mother','aadhar','place',
-                     'dob','phone','whatsapp','username','password','attendance']
+                     'dob','phone','whatsapp','username','password','attendance','marks']
     for col in required_cols:
         if col not in df.columns:
-            df[col] = ""
+            df[col] = "" if col not in ['attendance','marks'] else '{}'
     return df
 
 def add_student_db(data):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO students (name,class,father,mother,aadhar,place,dob,phone,whatsapp,username,password,attendance)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+        INSERT INTO students (name,class,father,mother,aadhar,place,dob,phone,whatsapp,username,password,attendance,marks)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
     ''', (
         data['name'], data['class'], data['father'], data['mother'],
         data['aadhar'], data['place'], data['dob'], data['phone'],
         data['whatsapp'], data['username'], data['password'],
-        json.dumps(data.get('attendance', {}))
+        json.dumps(data.get('attendance', {})),
+        json.dumps(data.get('marks', {}))
     ))
     conn.commit()
     conn.close()
@@ -90,13 +103,14 @@ def update_student_db(student_id, data):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''
-        UPDATE students SET name=?, class=?, father=?, mother=?, aadhar=?, place=?, dob=?, phone=?, whatsapp=?, username=?, password=?, attendance=?
+        UPDATE students SET name=?, class=?, father=?, mother=?, aadhar=?, place=?, dob=?, phone=?, whatsapp=?, username=?, password=?, attendance=?, marks=?
         WHERE id=?
     ''', (
         data['name'], data['class'], data['father'], data['mother'],
         data['aadhar'], data['place'], data['dob'], data['phone'],
         data['whatsapp'], data['username'], data['password'],
         json.dumps(data.get('attendance', {})),
+        json.dumps(data.get('marks', {})),
         student_id
     ))
     conn.commit()
@@ -128,7 +142,10 @@ def parse_att_json(att):
     if isinstance(att,dict): return att
     return {}
 
-# ------------------------- APP -------------------------
+def hash_pwd(pwd):
+    return hashlib.sha256(pwd.encode()).hexdigest()
+
+# ------------------ STREAMLIT APP ------------------
 st.set_page_config(page_title="GMS SCHOOL DHAMALA", layout="wide", page_icon="🎓")
 init_db()
 
@@ -137,11 +154,12 @@ if 'student_user' not in st.session_state: st.session_state.student_user=None
 
 page = st.sidebar.radio("Navigate", ["Home","Teacher Login","Student Login/Signup","AI Assistant","About"])
 
-# ------------------------- HOME -------------------------
+# ------------------ HOME ------------------
 if page=="Home":
-    st.write("Welcome to GMS SCHOOL DHAMALA — Teacher: rekha / rekha")
+    st.markdown("<h1 style='color:darkblue'>🎓 Welcome to GMS SCHOOL DHAMALA</h1>", unsafe_allow_html=True)
+    st.markdown("Manage students, attendance, marks, messaging, AI assistant and reports easily.")
 
-# ------------------------- TEACHER LOGIN -------------------------
+# ------------------ TEACHER LOGIN ------------------
 if page=="Teacher Login":
     st.header("Teacher Login")
     user = st.text_input("Username")
@@ -157,6 +175,7 @@ if page=="Teacher Login":
         st.subheader("Teacher Dashboard")
         left, right = st.columns([1,2])
 
+        # ------------------ Add Student ------------------
         with left:
             st.markdown("### Add Student")
             with st.form("add_form"):
@@ -186,22 +205,46 @@ if page=="Teacher Login":
                             "name":name.strip(),"class":cls,"father":father.strip(),
                             "mother":mother.strip(),"aadhar":aadhar.strip(),"place":place.strip(),
                             "dob":dob.isoformat(),"phone":phone.strip(),"whatsapp":whatsapp.strip(),
-                            "username":uname.strip(),"password":pwd_s.strip(),"attendance":{}
+                            "username":uname.strip(),"password":pwd_s.strip(),"attendance":{},"marks":{}
                         })
                         st.success(f"Added {name}")
 
+        # ------------------ Right Dashboard ------------------
         with right:
-            st.markdown("### Student Records")
+            # Attendance Management
+            st.subheader("📊 Attendance Management")
             df = fetch_df()
-            for col in ['class','username','place','attendance']:
-                if col not in df.columns: df[col]=""
+            if not df.empty:
+                df['attendance_dict'] = df['attendance'].apply(parse_att_json)
+                df['Total Present'] = df['attendance_dict'].apply(lambda d: sum(1 for v in d.values() if v=='P'))
+                df['Total Absent'] = df['attendance_dict'].apply(lambda d: sum(1 for v in d.values() if v=='A'))
+                st.dataframe(df[['name','class','Total Present','Total Absent']], height=200)
+
+                # Bar Chart
+                fig, ax = plt.subplots()
+                ax.bar(df['name'], df['Total Present'], label='Present', color='green')
+                ax.bar(df['name'], df['Total Absent'], bottom=df['Total Present'], label='Absent', color='red')
+                plt.xticks(rotation=45)
+                plt.ylabel("Days")
+                plt.title("Attendance Chart")
+                ax.legend()
+                st.pyplot(fig)
+
+                # Export Excel
+                towrite = io.BytesIO()
+                df[['name','class','Total Present','Total Absent']].to_excel(towrite, index=False, engine='openpyxl')
+                st.download_button("Download Attendance Excel", towrite.getvalue(), file_name="attendance.xlsx")
+
+            st.markdown("---")
+            # Student Records
+            st.markdown("### Student Records")
             display_cols=['id','name','class','father','mother','aadhar','place','dob','phone','whatsapp','username']
             if df.empty:
                 st.info("No students yet")
             else:
-                st.dataframe(df[display_cols], height=300)
+                st.dataframe(df[display_cols], height=200)
 
-            # Student Messages
+            # Messaging
             st.markdown("### Student Messages")
             conn = sqlite3.connect(DB_FILE)
             df_msg = pd.read_sql_query("SELECT * FROM messages ORDER BY timestamp DESC", conn)
@@ -219,7 +262,7 @@ if page=="Teacher Login":
                         conn.close()
                         st.success("Reply sent")
 
-# ------------------------- STUDENT LOGIN/SIGNUP -------------------------
+# ------------------ STUDENT LOGIN/SIGNUP ------------------
 if page=="Student Login/Signup":
     st.header("Student Signup/Login")
     c1,c2 = st.columns(2)
@@ -244,7 +287,7 @@ if page=="Student Login/Signup":
                     add_student_db({"name":name.strip(),"class":cls,"father":"","mother":"",
                                     "aadhar":"","place":"","dob":dob.isoformat(),"phone":phone.strip(),
                                     "whatsapp":phone.strip(),"username":uname.strip(),"password":pwd.strip(),
-                                    "attendance":{}})
+                                    "attendance":{},"marks":{}})
                     st.success("Signup complete. Use login panel.")
 
     with c2:
@@ -293,3 +336,40 @@ if page=="Student Login/Signup":
                     conn.commit()
                     conn.close()
                     st.success("Message sent to teacher")
+
+# ------------------ AI ASSISTANT ------------------
+if page=="AI Assistant":
+    st.header("🎓 AI Assistant - Rekha Rani")
+    st.markdown("Hi! I am **Rekha Rani**, your AI assistant. How can I help you today?")
+    user_query = st.text_area("Ask your question here:")
+    if st.button("Get Response"):
+        if user_query.strip():
+            response = f"Hi! I am Rekha Rani, your AI assistant. You asked: {user_query}"
+            st.success(response)
+    st.markdown("---")
+    st.markdown("**Contact Info:**")
+    st.markdown("**Name:** Rekha Rani  \n**Phone:** 9896300467  \n**Email:** rani1987rekha@gmail.com")
+
+# ------------------ ABOUT PAGE ------------------
+if page=="About":
+    st.title("📘 About GMS School Management System")
+    st.markdown("""
+    Welcome to **GMS School Dhamala** Student Management System.
+    
+    This app is designed to help teachers and students manage:
+    - Student records (Add / Edit / Delete)
+    - Attendance tracking
+    - Marks / Report Cards
+    - Messaging system
+    - AI Assistant
+    - Secure login
+    """)
+    st.markdown("---")
+    st.subheader("Developer / In-Charge")
+    st.markdown("""
+    **Name:** Rekha Rani  
+    **Class In-Charge:** 8th  
+    **Contact:** 9896300467  
+    **Email:** rani1987rekha@gmail.com  
+    """)
+    st.image("https://via.placeholder.com/300x150.png?text=GMS+School+Logo", width=300)
