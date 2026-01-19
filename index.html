@@ -3,43 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Om Bhardwaj | AI Legend</title>
+    <title>Om Bhardwaj | AI Specialist Pro</title>
     <!-- Icons & Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --neon-blue: #00f2ff;
             --neon-purple: #bc13fe;
             --bg-dark: #050505;
-            --card-glass: rgba(255, 255, 255, 0.03);
-            --text-main: #ffffff;
+            --glass: rgba(255, 255, 255, 0.05);
+            --text: #ffffff;
         }
 
         .light-mode {
-            --bg-dark: #f8fafc;
-            --text-main: #0f172a;
-            --card-glass: rgba(0, 0, 0, 0.05);
+            --bg-dark: #f0f4f8;
+            --text: #1a1a1a;
+            --glass: rgba(0, 0, 0, 0.05);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; scroll-behavior: smooth; }
         
         body {
             background-color: var(--bg-dark);
-            color: var(--text-main);
+            color: var(--text);
             overflow-x: hidden;
             transition: 0.5s;
         }
 
-        /* --- Custom Cursor --- */
-        .cursor {
-            width: 20px; height: 20px; border: 2px solid var(--neon-blue);
-            border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999;
-            transition: 0.1s; transform: translate(-50%, -50%);
-        }
-
-        /* --- Premium Navbar --- */
+        /* --- Stylish Navbar --- */
         nav {
             position: fixed; top: 0; width: 100%; padding: 15px 5%;
             display: flex; justify-content: space-between; align-items: center;
@@ -47,230 +40,196 @@
             z-index: 1000; border-bottom: 2px solid var(--neon-blue);
         }
 
-        .nav-logo-box {
-            display: flex; align-items: center; gap: 12px;
-            background: var(--card-glass); padding: 5px 15px;
-            border-radius: 50px; border: 1px solid var(--neon-blue);
-        }
-
-        .nav-logo-box img {
-            width: 40px; height: 40px; border-radius: 50%;
-            object-fit: cover; border: 2px solid var(--neon-purple);
+        .logo-section { display: flex; align-items: center; gap: 12px; }
+        .logo-section img {
+            width: 45px; height: 45px; border-radius: 50%;
+            border: 2px solid var(--neon-purple); object-fit: cover;
+            box-shadow: 0 0 10px var(--neon-purple);
         }
 
         .nav-links { display: flex; list-style: none; gap: 25px; }
         .nav-links a {
-            text-decoration: none; color: var(--text-main);
-            font-weight: 600; text-transform: uppercase; font-size: 0.8rem;
-            letter-spacing: 1px; transition: 0.3s;
+            text-decoration: none; color: var(--text); font-weight: 600;
+            font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.3s;
         }
-        .nav-links a:hover { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+        .nav-links a:hover { color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue); }
 
-        /* --- Hero Section with Typewriter --- */
+        /* --- Hero Section & Typewriter --- */
         .hero {
             height: 100vh; display: flex; flex-direction: column;
             justify-content: center; align-items: center; text-align: center;
             background: radial-gradient(circle at center, #111 0%, #000 100%);
+            padding: 20px;
         }
 
         .hero h1 {
-            font-family: 'Orbitron', sans-serif; font-size: 4.5rem;
-            margin-bottom: 15px; color: #fff;
+            font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 8vw, 4.5rem);
+            margin-bottom: 10px; line-height: 1.2;
         }
 
         #typewriter {
-            color: var(--neon-blue);
-            text-shadow: 0 0 20px var(--neon-blue);
+            color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue);
         }
 
-        .hero p { opacity: 0.7; font-size: 1.2rem; max-width: 700px; margin-top: 20px; }
+        .hero p { opacity: 0.8; font-size: 1.1rem; max-width: 800px; margin-top: 15px; }
 
-        /* --- Floating Skill Cards --- */
-        .section-title {
-            text-align: center; font-family: 'Orbitron'; font-size: 2.5rem;
-            margin: 100px 0 50px; color: var(--neon-purple);
+        /* --- Feature Buttons --- */
+        .btn-group { margin-top: 40px; display: flex; gap: 20px; flex-wrap: wrap; }
+        .btn-main {
+            padding: 15px 35px; border: 2px solid var(--neon-blue); color: var(--neon-blue);
+            text-decoration: none; border-radius: 5px; font-weight: bold;
+            text-transform: uppercase; font-family: 'Orbitron'; transition: 0.4s;
+        }
+        .btn-main:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 30px var(--neon-blue); }
+
+        /* --- Advanced Custom Form --- */
+        .form-section { padding: 100px 10%; background: #0a0a0a; }
+        .form-card {
+            max-width: 600px; margin: 0 auto; background: var(--glass);
+            padding: 40px; border-radius: 20px; border: 1px solid var(--neon-purple);
+            box-shadow: 0 0 30px rgba(188, 19, 254, 0.1);
         }
 
-        .skills-container {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px; padding: 0 10%;
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block; color: var(--neon-blue); font-family: 'Orbitron';
+            font-size: 0.75rem; margin-bottom: 8px; letter-spacing: 1px;
         }
-
-        .premium-card {
-            background: var(--card-glass); padding: 40px; border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1); position: relative;
-            overflow: hidden; transition: 0.4s; text-align: center;
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 12px; background: rgba(255,255,255,0.05);
+            border: 1px solid #333; color: white; border-radius: 8px; outline: none;
         }
+        .form-group input:focus { border-color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
 
-        .premium-card:hover {
-            transform: translateY(-15px) scale(1.05);
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+        .btn-submit {
+            width: 100%; padding: 15px; background: linear-gradient(45deg, var(--neon-purple), #5a00ff);
+            border: none; color: white; border-radius: 8px; font-weight: 700;
+            font-family: 'Orbitron'; cursor: pointer; transition: 0.4s;
         }
+        .btn-submit:hover { transform: scale(1.02); box-shadow: 0 0 25px var(--neon-purple); }
 
-        .premium-card i { font-size: 3rem; margin-bottom: 20px; color: var(--neon-blue); }
-
-        /* --- Live Subscribe Ticker --- */
+        /* --- THE LEGENDARY GRADIENT TICKER --- */
         .ticker-wrap {
-            position: fixed; bottom: 0; width: 100%; height: 50px;
-            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
-            overflow: hidden; display: flex; align-items: center; z-index: 999;
+            position: fixed; bottom: 0; width: 100%; height: 55px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple), #ff0055, var(--neon-blue));
+            background-size: 300% 100%;
+            display: flex; align-items: center; overflow: hidden; z-index: 2000;
+            border-top: 2px solid #fff;
+            animation: gradientMove 5s infinite linear;
         }
 
-        .ticker {
-            display: flex; white-space: nowrap; animation: marquee 20s linear infinite;
-        }
+        @keyframes gradientMove { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
 
+        .ticker { display: flex; white-space: nowrap; animation: marquee 15s linear infinite; }
         .ticker span {
-            font-family: 'Orbitron'; font-weight: bold; color: #000;
-            font-size: 1.2rem; padding: 0 50px;
+            font-family: 'Orbitron'; font-weight: 900; color: #000;
+            font-size: 1.1rem; padding: 0 60px; text-transform: uppercase;
         }
 
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* --- Floating Chatbot --- */
+        #chat-icon {
+            position: fixed; bottom: 80px; right: 30px; width: 65px; height: 65px;
+            background: var(--neon-blue); border-radius: 50%; display: flex;
+            justify-content: center; align-items: center; cursor: pointer;
+            box-shadow: 0 0 20px var(--neon-blue); z-index: 1001;
         }
 
-        /* --- Chatbot (Advanced Look) --- */
-        #bot-icon {
-            position: fixed; bottom: 80px; right: 30px;
-            width: 70px; height: 70px; background: var(--neon-purple);
-            border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            cursor: pointer; box-shadow: 0 0 20px var(--neon-purple); z-index: 1000;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(188, 19, 254, 0.7); }
-            70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(188, 19, 254, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(188, 19, 254, 0); }
-        }
-
-        .chat-box {
-            position: fixed; bottom: 160px; right: 30px; width: 350px;
-            height: 450px; background: #111; border: 2px solid var(--neon-blue);
-            border-radius: 20px; display: none; flex-direction: column; z-index: 1001;
-            box-shadow: 0 0 50px rgba(0,0,0,1);
-        }
-
-        /* --- Glow Buttons --- */
-        .btn-glow {
-            padding: 12px 30px; background: transparent; border: 2px solid var(--neon-blue);
-            color: var(--neon-blue); border-radius: 50px; text-decoration: none;
-            font-weight: bold; text-transform: uppercase; transition: 0.3s;
-        }
-        .btn-glow:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
-
+        @media (max-width: 768px) { .nav-links { display: none; } }
     </style>
 </head>
 <body>
 
-    <div class="cursor"></div>
-
+    <!-- Global Nav -->
     <nav>
-        <div class="nav-logo-box">
-            <img src="om.png" alt="Om">
-            <span style="font-family: 'Orbitron'; font-weight: 700; color: var(--neon-blue);">OM.AI</span>
+        <div class="logo-section">
+            <img src="om.png" alt="Om Profile">
+            <span style="font-family: 'Orbitron'; font-weight: 900; color: var(--neon-blue); letter-spacing: 2px;">OM AI</span>
         </div>
         <ul class="nav-links">
             <li><a href="#home">Home</a></li>
-            <li><a href="#skills">Abilities</a></li>
-            <li><a href="#projects">40+ Projects</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#about">About</a></li>
             <li><a href="#contact">Contact</a></li>
         </ul>
-        <div onclick="toggleMode()" style="cursor:pointer; color: var(--neon-purple); font-size: 1.5rem;">
-            <i class="fas fa-ghost"></i>
+        <div onclick="toggleLight()" style="cursor:pointer; font-size: 1.2rem; color: var(--neon-purple);">
+            <i class="fas fa-adjust"></i>
         </div>
     </nav>
 
+    <!-- Hero Section -->
     <section class="hero" id="home">
-        <h1 id="hero-title">I AM <span id="typewriter"></span></h1>
-        <p>Govt. Polytechnic Manesar Student | 40+ AI Projects Completed | Python & Automation Specialist</p>
-        <div style="margin-top: 50px; display: flex; gap: 20px;">
-            <a href="tel:9817179377" class="btn-glow"><i class="fas fa-phone"></i> Call Me</a>
-            <a href="https://youtube.com/@officialbhardwaj4813" class="btn-glow" style="border-color: #ff0000; color: #ff0000;"><i class="fab fa-youtube"></i> Subscribe</a>
+        <h1>I AM <span id="typewriter"></span></h1>
+        <p>Expert in Python (101%) | Student at Govt. Polytechnic Manesar | Developing 40+ Advanced AI Projects</p>
+        
+        <div class="btn-group">
+            <a href="tel:9817179377" class="btn-main"><i class="fas fa-phone"></i> Direct Call</a>
+            <a href="https://youtube.com/@officialbhardwaj4813" target="_blank" class="btn-main" style="border-color: #ff0000; color: #ff0000;"><i class="fab fa-youtube"></i> YouTube Core</a>
         </div>
     </section>
 
-    <section id="skills">
-        <h2 class="section-title">Technical Proficiency</h2>
-        <div class="skills-container">
-            <div class="premium-card">
-                <i class="fab fa-python"></i>
-                <h3>PYTHON</h3>
-                <p>Status: God Tier (101%)</p>
-                <div style="height:4px; background:var(--neon-blue); width:100%; margin-top:15px; box-shadow: 0 0 10px var(--neon-blue);"></div>
-            </div>
-            <div class="premium-card">
-                <i class="fab fa-html5"></i>
-                <h3>WEB DEV</h3>
-                <p>HTML: 100% | CSS: 20%</p>
-                <div style="height:4px; background:var(--neon-purple); width:80%; margin-top:15px;"></div>
-            </div>
-            <div class="premium-card">
-                <i class="fab fa-java"></i>
-                <h3>JAVA</h3>
-                <p>Level: Intermediate (50%)</p>
-                <div style="height:4px; background: #f89820; width:50%; margin-top:15px;"></div>
-            </div>
+    <!-- Custom Contact Section -->
+    <section class="form-section" id="contact">
+        <h2 style="text-align: center; font-family: 'Orbitron'; margin-bottom: 40px; color: var(--neon-blue);">SEND SYSTEM MESSAGE</h2>
+        <div class="form-card">
+            <form id="omForm">
+                <div class="form-group">
+                    <label>IDENTIFICATION NAME</label>
+                    <input type="text" placeholder="Enter Full Name" required>
+                </div>
+                <div class="form-group">
+                    <label>ROLL NUMBER / ID</label>
+                    <input type="text" placeholder="Official ID No." required>
+                </div>
+                <div class="form-group">
+                    <label>CAMPUS / INSTITUTE</label>
+                    <input type="text" placeholder="Ex: GP Manesar" required>
+                </div>
+                <div class="form-group">
+                    <label>MESSAGE DATA</label>
+                    <textarea rows="4" placeholder="Type your message..."></textarea>
+                </div>
+                <button type="submit" class="btn-submit">INITIALIZE TRANSMISSION</button>
+            </form>
         </div>
     </section>
 
-    <!-- Scrolling Subscribe Ticker -->
+    <!-- THE POWER TICKER (Jo aapne maanga tha) -->
     <div class="ticker-wrap">
         <div class="ticker">
-            <span>🔴 LIVE: SUBSCRIBERS GROWING...</span>
-            <span>OM BHARDWAJ - AI EXPERT</span>
-            <span>JOIN THE 40+ PROJECTS REVOLUTION</span>
-            <span>SUBSCRIBE @OFFICIALBHARDWAJ4813</span>
-            <span>GOVT POLYTECHNIC MANESAR PRIDE</span>
-            <!-- Repeat for seamless loop -->
-            <span>🔴 LIVE: SUBSCRIBERS GROWING...</span>
-            <span>OM BHARDWAJ - AI EXPERT</span>
-            <span>JOIN THE 40+ PROJECTS REVOLUTION</span>
-            <span>SUBSCRIBE @OFFICIALBHARDWAJ4813</span>
+            <span>🔥 MISSION: 1ST RANK</span>
+            <span>🚀 40+ AI PROJECTS COMPLETED</span>
+            <span>📱 CALL: 9817179377</span>
+            <span>💻 PYTHON EXPERT (101%)</span>
+            <span>🔴 SUBSCRIBE @OFFICIALBHARDWAJ4813</span>
+            <span>🎓 GOVT POLYTECHNIC MANESAR</span>
+            <!-- Second loop for seamless scroll -->
+            <span>🔥 MISSION: 1ST RANK</span>
+            <span>🚀 40+ AI PROJECTS COMPLETED</span>
+            <span>📱 CALL: 9817179377</span>
+            <span>💻 PYTHON EXPERT (101%)</span>
+            <span>🔴 SUBSCRIBE @OFFICIALBHARDWAJ4813</span>
+            <span>🎓 GOVT POLYTECHNIC MANESAR</span>
         </div>
     </div>
 
-    <!-- Contact Mini Form -->
-    <section id="contact" style="padding: 100px 10%; text-align: center;">
-        <h2 class="section-title">Initialize Contact</h2>
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfD_LycB6pId6-F-7XhI_Oox2FpxtT03J6w2S4pD-zQ_v88Mg/viewform?embedded=true" width="100%" height="600" style="border: 2px solid var(--neon-blue); border-radius: 20px; box-shadow: 0 0 30px rgba(0,242,255,0.1);">Loading...</iframe>
-    </section>
-
-    <div id="bot-icon" onclick="toggleChat()">
-        <i class="fas fa-brain" style="font-size: 2rem; color: #fff;"></i>
-    </div>
-
-    <div class="chat-box" id="chatbox">
-        <div style="background:var(--neon-blue); padding:15px; color:#000; font-weight:bold; border-radius:18px 18px 0 0;">OM'S BRAIN (AI)</div>
-        <div id="chat-content" style="flex:1; padding:15px; overflow-y:auto; font-size:0.9rem;">
-            <p style="background:rgba(0,242,255,0.1); padding:10px; border-radius:10px;">System Online. Ask me about Om's Python skills!</p>
-        </div>
-        <input type="text" id="user-input" placeholder="Enter command..." style="padding:15px; background:#222; border:none; color:white; outline:none;" onkeypress="processChat(event)">
+    <!-- AI Bot Chat Icon -->
+    <div id="chat-icon">
+        <i class="fas fa-robot" style="font-size: 2rem; color: #000;"></i>
     </div>
 
     <script>
-        // Custom Cursor
-        const cursor = document.querySelector('.cursor');
-        document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-        });
-
-        // Typewriter Effect
-        const words = ["OM BHARDWAJ", "AI DEVELOPER", "PYTHON EXPERT", "GENIUS"];
+        // 1. Typewriter Effect Logic
+        const words = ["OM BHARDWAJ", "A VISIONARY STUDENT", "A PYTHON LEGEND", "AN AI RESEARCHER"];
         let i = 0, j = 0, current = '', isDeleting = false;
 
         function type() {
             current = words[i];
-            if (isDeleting) {
-                document.getElementById("typewriter").textContent = current.substring(0, j-1);
-                j--;
-            } else {
-                document.getElementById("typewriter").textContent = current.substring(0, j+1);
-                j++;
-            }
+            const text = isDeleting ? current.substring(0, j-1) : current.substring(0, j+1);
+            document.getElementById("typewriter").textContent = text;
+            j = isDeleting ? j-1 : j+1;
 
             if (!isDeleting && j === current.length) {
                 isDeleting = true;
@@ -280,33 +239,21 @@
                 i = (i + 1) % words.length;
                 setTimeout(type, 500);
             } else {
-                setTimeout(type, isDeleting ? 50 : 150);
+                setTimeout(type, isDeleting ? 70 : 130);
             }
         }
         type();
 
-        // Theme Toggle
-        function toggleMode() {
+        // 2. Light/Dark Mode
+        function toggleLight() {
             document.body.classList.toggle('light-mode');
         }
 
-        // Chatbot
-        function toggleChat() {
-            const cb = document.getElementById('chatbox');
-            cb.style.display = cb.style.display === 'flex' ? 'none' : 'flex';
-        }
-
-        function processChat(e) {
-            if(e.key === 'Enter') {
-                const val = e.target.value;
-                const cont = document.getElementById('chat-content');
-                cont.innerHTML += `<p style="text-align:right; color:var(--neon-purple);">User: ${val}</p>`;
-                setTimeout(() => {
-                    cont.innerHTML += `<p style="color:var(--neon-blue);">AI: Om is currently building 40+ projects at Polytechnic Manesar!</p>`;
-                }, 500);
-                e.target.value = "";
-            }
-        }
+        // 3. Form Alert
+        document.getElementById('omForm').onsubmit = (e) => {
+            e.preventDefault();
+            alert("SUCCESS: Data Transmitted to Om Bhardwaj's System! 🚀");
+        };
     </script>
 </body>
 </html>
